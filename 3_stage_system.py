@@ -9,6 +9,7 @@ SIZE = 0.2
 MOVEMENT_COEFFICIENT = 0.2
 INITIAL_BOX_SIZE = 20
 numpoints = 300
+recovered_cant_infect = False
 
 
 def get_status_colors():
@@ -70,8 +71,9 @@ def get_movement_coefficient():
 
 class CoronaSimulator(object):
     """An animated scatter plot using matplotlib.animations.FuncAnimation."""
-    def __init__(self, numpoints=100, num_infected=5, max_num_steps=500):
+    def __init__(self, numpoints=100, num_infected=5, max_num_steps=500, recovered_cant_infect=True):
         self.numpoints = numpoints
+        self.recovered_cant_infect = recovered_cant_infect
         self.stream = self.data_stream()
 
         # Setup the figure and axes...
@@ -103,13 +105,10 @@ class CoronaSimulator(object):
     def data_stream(self):
         """Generate a random walk (brownian motion). Data is scaled to produce
         a soft "flickering" effect."""
-        # xy = (np.random.random((self.numpoints, 2))-0.5)*10
-        # sizes = 0.3*np.ones(self.numpoints)
-        # colors = self.status_colors['not_infected']*np.ones(self.numpoints)
         xy, sizes, colors = self.initialize_data_stream()
 
         while True:
-            xy += MOVEMENT_COEFFICIENT * (np.random.random((self.numpoints, 2)) - 0.5)
+            xy = self.update_positions(xy)
             self.update_status(xy)
             colors = self.update_colors()
             # self.counter += 1
@@ -117,6 +116,20 @@ class CoronaSimulator(object):
             #     break
             
             yield np.c_[xy[:,0], xy[:,1], sizes, colors]
+
+    def update_positions(self, xy):
+        """[summary]
+        
+        Arguments:
+            xy {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+        mobile_individuals = np.expand_dims((self.current_stages_of_individuals != 4).astype("int"),1)
+        xy += MOVEMENT_COEFFICIENT * mobile_individuals * (np.random.random((self.numpoints, 2)) - 0.5) 
+
+        return xy
 
 
     def update_colors(self):
@@ -187,17 +200,23 @@ class CoronaSimulator(object):
         # update identities of infected
         updated_infected = np.logical_or(already_infected, newly_infected)
         self.identities_of_infected = np.nonzero(updated_infected)[0]
+        if self.recovered_cant_infect:
+            self.identities_of_recovered = np.nonzero(self.current_stages_of_individuals == 5)[0]
+            self.identities_of_infected = np.array([idx for idx in self.identities_of_infected if idx not in self.identities_of_recovered ]).astype("int")
+            updated_infected = np.zeros(self.numpoints)
+            updated_infected[self.identities_of_infected] = 1
+
+
 
         # update infected matrix
         self.infected_matrix = np.zeros_like(self.infected_matrix)
         self.infected_matrix[self.identities_of_infected, :] = 1
 
         # update 
-        # (self.current_stages_of_individuals > 0).astype("int")
         new_cases = (updated_infected - already_infected).copy().astype("int")
         self.transition_manager.time_counters[np.nonzero(new_cases)[0]] = 0
-        # new_infected_individuals = np.logical_not(newly_infected.astype("int"), self.current_stages_of_individuals.copy()).astype("int")
         self.current_stages_of_individuals += new_cases
+        # self.current_stages_of_individuals = np.minumum(self.current_stages_of_individuals, 5)
 
 
     def initialize_data_stream(self):
@@ -230,5 +249,5 @@ class CoronaSimulator(object):
 
 
 if __name__ == '__main__':
-    a = CoronaSimulator(numpoints=numpoints)
+    a = CoronaSimulator(numpoints=numpoints, recovered_cant_infect=recovered_cant_infect)
     plt.show()
