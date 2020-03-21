@@ -23,7 +23,7 @@ def get_status_colors():
         "not_infected" : 0.3,
         "infected" : 0.65,
         "contagious" : 0.7,
-        "diagnosis": 0.8,
+        "diagnosed": 0.8,
         "immobilized" : 0.9,
         "recovered" : 0.4,
     }
@@ -41,7 +41,7 @@ def get_status2num_dict():
         "not_infected" : 0,
         "infected" : 1,
         "contagious" : 2,
-        "diagnosis": 3,
+        "diagnosed": 3,
         "immobilized" : 4,
         "recovered" : 5,
     }
@@ -94,12 +94,37 @@ class CoronaSimulator(object):
         """Initial drawing of the scatter plot."""
         x, y, s, c = next(self.stream).T
         self.scat = self.ax.scatter(x, y, c=c, s=s, vmin=0, vmax=1,
-                                    cmap="jet", edgecolor="k")
+                                    cmap="jet", edgecolor="k", alpha=0.9)
         L = int(INITIAL_BOX_SIZE/2)
         self.ax.axis([-L, L, -L, L])
+
+        # add legend
+        handles, labels = self.get_handles_for_legend()
+        self.ax.legend(handles, labels, loc="upper left", title="disease stages")
+        self.ax.set_zorder(-1)
+
         # For FuncAnimation's sake, we need to return the artist we'll be using
         # Note that it expects a sequence of artists, thus the trailing comma.
         return self.scat,
+
+
+    def get_handles_for_legend(self):
+
+        colors = np.zeros(len(self.status2num))
+        x, y = np.arange(len(self.status2num)), np.arange(len(self.status2num))
+
+        color_names = []
+        for status, num in self.status2num.items():
+            colors[num] = self.status_colors[status]
+            color_names.append(status)
+
+
+        scat = plt.scatter(x, y, c=colors, s=SIZE*np.ones(len(self.status2num)), vmin=0, vmax=1,
+                                    cmap="jet", edgecolor="k")
+
+        handles, labels =  scat.legend_elements(prop="colors", alpha=0.6)
+
+        return handles, list(color_names)
 
 
     def data_stream(self):
@@ -242,7 +267,8 @@ class CoronaSimulator(object):
         self.scat.set_sizes(300 * abs(data[:, 2])**1.5 + 100)
         # Set colors..
         self.scat.set_array(data[:, 3])
-
+        
+        self.scat.set_zorder(1)
         # We need to return the updated artist for FuncAnimation to draw..
         # Note that it expects a sequence of artists, thus the trailing comma.
         return self.scat,
