@@ -7,10 +7,10 @@ class TransitionManager:
         self.num_points = num_points
 
         self.transition_times = {
-            "infected-contagious": {"mean": 20, "std": 0.1},
-            "contagious-diagnosis": {"mean": 10, "std": 0.1},
-            "diagnosis-immobilized": {"mean" : 10, "std": 2},
-            "immobilized-recovered": {"mean" : 10, "std": 2}
+            "infected-contagious": {"mean": 20, "std": 5},
+            "contagious-diagnosis": {"mean": 50, "std": 5},
+            "diagnosis-immobilized": {"mean" : 5, "std": 2},
+            "immobilized-recovered": {"mean" : 100, "std": 5}
         }
 
         self.number_of_transitions = len(self.transition_times)
