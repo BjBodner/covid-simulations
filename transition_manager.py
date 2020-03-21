@@ -1,4 +1,4 @@
-
+import numpy as np
 
 class TransitionManager:
 
@@ -7,10 +7,10 @@ class TransitionManager:
         self.num_points = num_points
 
         self.transition_times = {
-            "infected-contagious": {"mean": 20, "std": 2},
-            "contagious-diagnosis": {"mean": 20, "std": 2},
-            "diagnosis-immobilized": {"mean" : 5, "std": 2},
-            "immobilized-recovered": {"mean" : 50, "std": 2}
+            "infected-contagious": {"mean": 20, "std": 0.1},
+            "contagious-diagnosis": {"mean": 10, "std": 0.1},
+            "diagnosis-immobilized": {"mean" : 10, "std": 2},
+            "immobilized-recovered": {"mean" : 10, "std": 2}
         }
 
         self.number_of_transitions = len(self.transition_times)
@@ -36,10 +36,10 @@ class TransitionManager:
         }
 
 
-   def _sample_transition_times_from_distribution(self):
+    def _sample_transition_times_from_distribution(self):
         """ samples the transition times for all individuals, and saves in self.transition_times """
-        transition_array = np.zeros((self.num_points , self.number_of_transitions))
-        for i in range(1, self.number_of_transitions):
+        transition_array = np.zeros((self.num_points , self.number_of_transitions + 2))
+        for i in range(1, self.number_of_transitions + 1):
 
             # get distribution parameters
             mean = self.transition_times[ self.num_2_transition [i] ] ["mean"]
@@ -51,21 +51,27 @@ class TransitionManager:
         self.transition_times = transition_array
 
 
-    def update_stages_of_desease(self, current_stages_of_individuals):
-        """ updates the stages of the desease"""
-
+    def update_stages_of_disease(self, current_stages_of_individuals):
+        """updates the stages of the desease in all individuals
+        
+        Arguments:
+            current_stages_of_individuals {[np.ndarray]} -- the current stages of the desease in the different individuals
+        
+        Returns:
+            [np.ndarray] -- the new stages of the desease in all individuals, shape = [num_points]
+        """
         # updates the stages of the individuals
-        new_stages_of_individuals, indicies_that_transitioned_to_next_stage = self.update_stages(current_stages_of_individuals)
+        new_stages_of_individuals, indicies_that_transitioned_to_next_stage = self._update_stages(current_stages_of_individuals)
 
         # increments the time counter for individuals, and reboots it if a transition occured
-        if len(indicies_of_counters_to_reboot) > 0
-            self.time_counters[indicies_of_counters_to_reboot] = 0
+        if (len(indicies_that_transitioned_to_next_stage) > 0):
+            self.time_counters[indicies_that_transitioned_to_next_stage] = 0
         self.time_counters += 1
 
         return new_stages_of_individuals
 
 
-    def update_stages(self, current_stages_of_individuals):
+    def _update_stages(self, current_stages_of_individuals):
         """updates the stages of the desease for all individuals, using the transition times
         
         Arguments:
@@ -75,23 +81,26 @@ class TransitionManager:
             [np.ndarray, np.ndarray] -- [the new stages of the individuals, the indicies for which these changes happened]
         """
         # get the relavent transition times for each individual
-        current_stages_of_individuals_ = np.expand_dims(current_stages_of_individuals, 1)
-        relavent_transition_times = self.transition_times[stagecurrent_stages_of_individuals_s_of_individuals_ ]
+        current_stages_of_individuals = current_stages_of_individuals.astype("int") 
+        relavent_transition_times = np.array([self.transition_times[i, current_stages_of_individuals[i] ] for i in range(self.num_points)])
 
         # find transitions to apply
-        transitions_to_apply = (self.time_counters > relavent_transition_times).int()
+        transitions_to_apply = (current_stages_of_individuals != 0) * (self.time_counters > relavent_transition_times).astype("int")
 
         # apply transitions and get the indicies which they occurs in
         new_stages_of_individuals = current_stages_of_individuals + transitions_to_apply
+
+        # make sure we don't pass the maximum allows stage for the disease
+        new_stages_of_individuals = np.minimum(new_stages_of_individuals, 5) 
         indicies_that_transitioned_to_next_stage = np.nonzero(transitions_to_apply) [0] 
+
 
         return new_stages_of_individuals, indicies_that_transitioned_to_next_stage
 
 
 
-
 def test_transition_manager():
-    transition_manager = TransitionManager()
+    transition_manager = TransitionManager(num_points=50)
 
 
 if __name__ == '__main__':

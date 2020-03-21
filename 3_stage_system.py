@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
+from transition_manager import TransitionManager
 
 RADIUS_OF_INFECTION = 1
 PROBABILITY_OF_INFECTION = 0.1
@@ -19,11 +20,11 @@ def get_status_colors():
     """
     colors = {
         "not_infected" : 0.3,
-        "infected" : 0.7,
-        "contagious" : 0.8,
-        "diagnosis": 0.85,
+        "infected" : 0.65,
+        "contagious" : 0.7,
+        "diagnosis": 0.8,
         "immobilized" : 0.9,
-        "recovered" : 0.5,
+        "recovered" : 0.4,
     }
     return colors
 
@@ -60,38 +61,6 @@ def get_num2status_dict():
     return num2status
 
 
-def get_transition_times():
-    """[summary]
-    
-    Returns:
-        [dict] -- the transition time between different stages of the desease 
-    """
-    transition_times = {
-        "infected-contagious": {"mean": 20, "std": 2},
-        "contagious-diagnosis": {"mean": 20, "std": 2},
-        "diagnosis-immobilized": {"mean" : 5, "std": 2},
-        "immobilized-recovered": {"mean" : 50, "std": 2}
-    }
-
-    transition_2_num = {
-        "infected-contagious": 0,
-        "contagious-diagnosis": 1,
-        "diagnosis-immobilized": 2,
-        "immobilized-recovered": 3
-    }
-
-    num_2_transition = {
-        0 : "infected-contagious",
-        1 : "contagious-diagnosis",
-        2 : "diagnosis-immobilized",
-        3 : "immobilized-recovered",
-    }
-
-    
-    return transition_times, transition_2_num, num_2_transition
-
-
-
 def get_movement_coefficient():
     """"samples the movement coefficient from a boltzman distribution
     how much each individual moves
@@ -116,6 +85,7 @@ class CoronaSimulator(object):
         self.initialize_infected(num_infected)
         self.counter = 0
         self.max_num_steps = max_num_steps
+        self.transition_manager = TransitionManager(numpoints)
 
 
     def setup_plot(self):
@@ -140,13 +110,12 @@ class CoronaSimulator(object):
 
         while True:
             xy += MOVEMENT_COEFFICIENT * (np.random.random((self.numpoints, 2)) - 0.5)
-            self.update_stages_of_disease(xy)
+            self.update_status(xy)
             colors = self.update_colors()
             # self.counter += 1
             # if self.counter > self.max_num_steps:
             #     break
             
-            self.increment_time_counters()
             yield np.c_[xy[:,0], xy[:,1], sizes, colors]
 
 
@@ -159,35 +128,25 @@ class CoronaSimulator(object):
         infected = np.zeros(self.numpoints)
         infected[self.identities_of_infected] = 1
 
-        self.stages_of_individuals = infected
+        # self.stages_of_individuals = infected
         colors = np.zeros(self.numpoints)
 
         for stage_name, stage_num in self.status2num.items():
-            colors += self.status_colors[stage_name] * ( self.stages_of_individuals == stage_num )
+            colors += self.status_colors[stage_name] * ( self.current_stages_of_individuals == stage_num )
 
         return colors
-
-
-    def update_stages_of_individuals(self):
-
-        time_counters = self.get_time_counters_of_all_individuals()
-        transition_times = self.get_transition_times()
-        require_transitions = (time_counters > transition_times).int()
-
-        # update stages of individuals
-        self.stages_of_individuals += require_transitions
-                
-        
 
 
     def initialize_infected(self, num_infected):
         """ initializes the infected matrix with the number of infected individuals"""
 
         self.infected_matrix = np.zeros((self.numpoints,self.numpoints))
+        self.current_stages_of_individuals = np.zeros(self.numpoints).astype("int")
         self.identities_of_infected = np.random.randint(0, self.numpoints, num_infected)
 
         # set the rows of the infected to 1
         self.infected_matrix[self.identities_of_infected, :] = 1
+        self.current_stages_of_individuals[self.identities_of_infected] = 1
 
 
     def update_status(self, xy):
@@ -213,6 +172,10 @@ class CoronaSimulator(object):
         # update who is infected
         self.update_who_is_infected(identities_of_newly_infected)
 
+        # update the different stages of the disease
+        self.current_stages_of_individuals = self.transition_manager.update_stages_of_disease(self.current_stages_of_individuals)
+        print(f"unique stages: {np.unique(self.current_stages_of_individuals)}")
+
 
     def update_who_is_infected(self, identities_of_newly_infected):
 
@@ -228,6 +191,13 @@ class CoronaSimulator(object):
         # update infected matrix
         self.infected_matrix = np.zeros_like(self.infected_matrix)
         self.infected_matrix[self.identities_of_infected, :] = 1
+
+        # update 
+        # (self.current_stages_of_individuals > 0).astype("int")
+        new_cases = (updated_infected - already_infected).copy().astype("int")
+        self.transition_manager.time_counters[np.nonzero(new_cases)[0]] = 0
+        # new_infected_individuals = np.logical_not(newly_infected.astype("int"), self.current_stages_of_individuals.copy()).astype("int")
+        self.current_stages_of_individuals += new_cases
 
 
     def initialize_data_stream(self):
