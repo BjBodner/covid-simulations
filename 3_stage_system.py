@@ -99,8 +99,8 @@ class CoronaSimulator(object):
         self.ax.axis([-L, L, -L, L])
 
         # add legend
-        handles, labels = self.get_handles_for_legend()
-        self.ax.legend(handles, labels, loc="upper left", title="disease stages")
+        self.handles, self.labels = self.get_handles_for_legend()
+        self.ax.legend(self.handles, self.labels, loc="upper left", title="disease stages", fontsize=12)
         self.ax.set_zorder(-1)
 
         # For FuncAnimation's sake, we need to return the artist we'll be using
@@ -113,18 +113,25 @@ class CoronaSimulator(object):
         colors = np.zeros(len(self.status2num))
         x, y = np.arange(len(self.status2num)), np.arange(len(self.status2num))
 
-        color_names = []
+        color_names = [None]*len(self.status2num)
         for status, num in self.status2num.items():
             colors[num] = self.status_colors[status]
-            color_names.append(status)
+            color_names[num] = status
 
 
-        scat = plt.scatter(x, y, c=colors, s=SIZE*np.ones(len(self.status2num)), vmin=0, vmax=1,
+        scat = plt.scatter(x, y, c=colors, s=SIZE*np.ones(len(self.status2num)), vmin=0, vmax=1, label=list(color_names),
                                     cmap="jet", edgecolor="k")
 
         handles, labels =  scat.legend_elements(prop="colors", alpha=0.6)
 
-        return handles, list(color_names)
+        # fix the resorting issue created within the scat.legend_elements function - to reallign the handles and the labels
+        handle_labels = []
+        for i in range(len(labels)):
+            handle_color = float(labels[i].split('{')[-1].split('}')[0])
+            idx = np.argmin((handle_color - colors)**2)
+            handle_labels.append(color_names[idx])
+
+        return handles, handle_labels
 
 
     def data_stream(self):
@@ -268,7 +275,8 @@ class CoronaSimulator(object):
         # Set colors..
         self.scat.set_array(data[:, 3])
         
-        self.scat.set_zorder(1)
+        # legend1 = self.ax.legend(self.handles, self.labels, loc="upper left", title="disease stages", fontsize=10)
+        # self.ax.add_artist(legend1)
         # We need to return the updated artist for FuncAnimation to draw..
         # Note that it expects a sequence of artists, thus the trailing comma.
         return self.scat,
