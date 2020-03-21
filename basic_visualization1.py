@@ -96,6 +96,7 @@ class AnimatedScatter(object):
                                           init_func=self.setup_plot, blit=True)
 
         self.status_colors = get_status_colors()
+        self.status2num = get_status2num_dict()
         self.initialize_infected(num_infected)
         self.counter = 0
         self.max_num_steps = max_num_steps
@@ -140,10 +141,18 @@ class AnimatedScatter(object):
         infected = np.zeros(self.numpoints)
         infected[self.identities_of_infected] = 1
 
-        colors = infected*self.status_colors['infected'] + (1-infected)*self.status_colors['not_infected']
+        self.stages_of_individuals = infected
+        colors = np.zeros(self.numpoints)
+
+        for stage_name, stage_num in self.status2num.items():
+            colors += self.status_colors[stage_name] * ( self.stages_of_individuals == stage_num )
+
         return colors
 
+    def update_stages_of_individuals(self):
 
+                self.stages_of_individuals = infected
+                
     def initialize_infected(self, num_infected):
         """ initializes the infected matrix with the number of infected individuals"""
 
