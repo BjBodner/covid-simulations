@@ -128,18 +128,20 @@ class AnimatedScatter(object):
             # self.counter += 1
             # if self.counter > self.max_num_steps:
             #     break
-
             yield np.c_[xy[:,0], xy[:,1], sizes, colors]
 
 
     def update_colors(self):
-
+        """update the status colors according to the stages of the desease
+        
+        Returns:
+            [np.ndarray] -- an array with the status colors of the different individuals
+        """
         infected = np.zeros(self.numpoints)
         infected[self.identities_of_infected] = 1
 
         colors = infected*self.status_colors['infected'] + (1-infected)*self.status_colors['not_infected']
         return colors
-
 
 
     def initialize_infected(self, num_infected):
