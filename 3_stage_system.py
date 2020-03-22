@@ -3,7 +3,7 @@ import matplotlib.animation as animation
 import numpy as np
 from transition_manager import TransitionManager
 
-MOVEMENT_COEFFICIENT = 0.1
+MOVEMENT_COEFFICIENT = 0.15
 RADIUS_OF_INFECTION = 1
 PROBABILITY_OF_INFECTION = 0.1
 SIZE = 0.2
