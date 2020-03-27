@@ -10,6 +10,7 @@ size_of_box = 20
 numpoints = 300
 recovered_cant_infect = True
 
+INITIAL_NUM_INFECTED = 5
 SIZE = 0.2
 
 def get_status_colors():
@@ -87,8 +88,10 @@ class CoronaSimulator(object):
         # Then setup FuncAnimation.
         self.ani = animation.FuncAnimation(self.fig, self.update, interval=5, 
                                           init_func=self.setup_plot, blit=True)
-
         self.status_colors = get_status_colors()
+        print(self.status_colors)
+        self.num_infected = num_infected
+        print(self.num_infected)
         self.status2num = get_status2num_dict()
         self.initialize_infected(num_infected)
         self.counter = 0
@@ -159,11 +162,16 @@ class CoronaSimulator(object):
         """[summary]
         
         Arguments:
-            xy {[type]} -- [description]
+            xy {[np.ndarray]} -- the xy positions of all the individuals
         
         Returns:
-            [type] -- [description]
+            [xy] -- [description]
         """
+        try:
+            self.current_stages_of_individuals = self.current_stages_of_individuals
+        except AttributeError:
+            self.current_stages_of_individuals = np.zeros(self.numpoints).astype("int")
+
         mobile_individuals = np.expand_dims((self.current_stages_of_individuals != 4).astype("int"),1)
         xy += self.amount_of_movement * mobile_individuals * (np.random.random((self.numpoints, 2)) - 0.5) 
 
@@ -182,6 +190,10 @@ class CoronaSimulator(object):
         # self.stages_of_individuals = infected
         colors = np.zeros(self.numpoints)
 
+        try:
+            self.status2num = self.status2num
+        except AttributeError:
+            self.status2num = get_status2num_dict()
         for stage_name, stage_num in self.status2num.items():
             colors += self.status_colors[stage_name] * ( self.current_stages_of_individuals == stage_num )
 
@@ -209,6 +221,14 @@ class CoronaSimulator(object):
         within_radius = (adjacency_matrix < self.radius_of_possible_infection)
 
         # find individuals that are within this radius with another infected individual
+        try:
+            self.infected_matrix = self.infected_matrix
+        except AttributeError:
+            self.identities_of_infected = np.random.randint(0, self.numpoints, INITIAL_NUM_INFECTED)
+            self.infected_matrix = np.zeros((self.numpoints,self.numpoints))
+            self.infected_matrix[self.identities_of_infected, :] = 1
+
+
         at_risk_of_infection = within_radius * self.infected_matrix
 
         # find all individuals that should probabalistically get infected  (with or without contact with another infected)
@@ -252,9 +272,12 @@ class CoronaSimulator(object):
 
         # update 
         new_cases = (updated_infected - already_infected).copy().astype("int")
-        self.transition_manager.time_counters[np.nonzero(new_cases)[0]] = 0
+        try:
+            self.transition_manager.time_counters[np.nonzero(new_cases)[0]] = 0
+        except AttributeError:
+            self.transition_manager = TransitionManager(self.numpoints)
+            self.transition_manager.time_counters[np.nonzero(new_cases)[0]] = 0
         self.current_stages_of_individuals += new_cases
-        # self.current_stages_of_individuals = np.minumum(self.current_stages_of_individuals, 5)
 
 
     def initialize_data_stream(self):
@@ -265,6 +288,8 @@ class CoronaSimulator(object):
         """
         xy = (np.random.random((self.numpoints, 2))-0.5)*self.size_of_box
         sizes = SIZE*np.ones(self.numpoints)
+        print("self.numpoints",self.numpoints)
+        self.status_colors = get_status_colors()
         colors = self.status_colors['not_infected']*np.ones(self.numpoints)
 
         return xy, sizes, colors 
