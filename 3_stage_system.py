@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
-from transition_manager import TransitionManager
+from disease_state_handler import TransitionManager
 
 MOVEMENT_COEFFICIENT = 0.15
 RADIUS_OF_INFECTION = 1
@@ -69,7 +69,7 @@ def get_movement_coefficient():
     """
 
 
-class CoronaSimulator(object):
+class CovidSimulator(object):
     """An animated scatter plot using matplotlib.animations.FuncAnimation."""
     def __init__(self, numpoints=100, num_infected=5, max_num_steps=500, recovered_cant_infect=True):
         self.numpoints = numpoints
@@ -283,5 +283,5 @@ class CoronaSimulator(object):
 
 
 if __name__ == '__main__':
-    a = CoronaSimulator(numpoints=numpoints, recovered_cant_infect=recovered_cant_infect)
+    a = CovidSimulator(numpoints=numpoints, recovered_cant_infect=recovered_cant_infect)
     plt.show()

@@ -1,6 +1,6 @@
 import numpy as np
 
-class TransitionManager:
+class DiseaseStateHandler:
 
     def __init__(self, num_points):
 
