@@ -30,14 +30,14 @@ def get_status_colors():
     return colors
 
 
-def get_status2num_dict():
+def get_STATUS_dict():
     """[summary]
     
     Returns:
         [type] -- [description]
     """
 
-    status2num = {
+    STATUS = {
         "not_infected" : 0,
         "infected" : 1,
         "contagious" : 2,
@@ -45,7 +45,7 @@ def get_status2num_dict():
         "immobilized" : 4,
         "recovered" : 5,
     }
-    return status2num
+    return STATUS
 
 
 def get_num2status_dict():
@@ -54,9 +54,9 @@ def get_num2status_dict():
     Returns:
         [type] -- [description]
     """
-    status2num = get_status2num_dict()
+    STATUS = get_STATUS_dict()
     num2status = {}
-    for key, val in status2num.items():
+    for key, val in STATUS.items():
         num2status[val] = key
 
     return num2status
@@ -83,7 +83,7 @@ class CoronaSimulator(object):
                                           init_func=self.setup_plot, blit=True)
 
         self.status_colors = get_status_colors()
-        self.status2num = get_status2num_dict()
+        self.STATUS = get_STATUS_dict()
         self.initialize_infected(num_infected)
         self.counter = 0
         self.max_num_steps = max_num_steps
@@ -110,16 +110,16 @@ class CoronaSimulator(object):
 
     def get_handles_for_legend(self):
 
-        colors = np.zeros(len(self.status2num))
-        x, y = np.arange(len(self.status2num)), np.arange(len(self.status2num))
+        colors = np.zeros(len(self.STATUS))
+        x, y = np.arange(len(self.STATUS)), np.arange(len(self.STATUS))
 
-        color_names = [None]*len(self.status2num)
-        for status, num in self.status2num.items():
+        color_names = [None]*len(self.STATUS)
+        for status, num in self.STATUS.items():
             colors[num] = self.status_colors[status]
             color_names[num] = status
 
 
-        scat = plt.scatter(x, y, c=colors, s=SIZE*np.ones(len(self.status2num)), vmin=0, vmax=1, label=list(color_names),
+        scat = plt.scatter(x, y, c=colors, s=SIZE*np.ones(len(self.STATUS)), vmin=0, vmax=1, label=list(color_names),
                                     cmap="jet", edgecolor="k")
 
         handles, labels =  scat.legend_elements(prop="colors", alpha=0.6)
@@ -176,7 +176,7 @@ class CoronaSimulator(object):
         # self.stages_of_individuals = infected
         colors = np.zeros(self.numpoints)
 
-        for stage_name, stage_num in self.status2num.items():
+        for stage_name, stage_num in self.STATUS.items():
             colors += self.status_colors[stage_name] * ( self.current_stages_of_individuals == stage_num )
 
         return colors

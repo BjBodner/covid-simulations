@@ -13,61 +13,80 @@ recovered_cant_infect = True
 INITIAL_NUM_INFECTED = 5
 SIZE = 0.2
 
-def get_status_colors():
-    """creates and returns a dict with the colors for the different statuses of the balls
-    
-    Returns:
-        [dict] -- a dict for the status colors of the balls:
-                    keys are: [not_infected, infected, contagious, sick-immobilized, immune]
-    """
-    colors = {
+COLORS = {
         "not_infected" : 0.3,
         "infected" : 0.65,
         "contagious" : 0.7,
         "diagnosed": 0.8,
         "immobilized" : 0.9,
         "recovered" : 0.4,
-    }
-    return colors
+}
+STATES = {
+    "not_infected" : 0,
+    "infected" : 1,
+    "contagious" : 2,
+    "diagnosed": 3,
+    "immobilized" : 4,
+    "recovered" : 5,
+}
+NUM2STATE = {v: k for k, v in STATES.items()}
 
 
-def get_status2num_dict():
-    """[summary]
+# def get_status_colors():
+#     """creates and returns a dict with the colors for the different statuses of the balls
     
-    Returns:
-        [type] -- [description]
-    """
+#     Returns:
+#         [dict] -- a dict for the status colors of the balls:
+#                     keys are: [not_infected, infected, contagious, sick-immobilized, immune]
+#     """
+#     colors = {
+#         "not_infected" : 0.3,
+#         "infected" : 0.65,
+#         "contagious" : 0.7,
+#         "diagnosed": 0.8,
+#         "immobilized" : 0.9,
+#         "recovered" : 0.4,
+#     }
+#     return colors
 
-    status2num = {
-        "not_infected" : 0,
-        "infected" : 1,
-        "contagious" : 2,
-        "diagnosed": 3,
-        "immobilized" : 4,
-        "recovered" : 5,
-    }
-    return status2num
 
-
-def get_num2status_dict():
-    """[summary]
+# def get_STATUS_dict():
+#     """[summary]
     
-    Returns:
-        [type] -- [description]
-    """
-    status2num = get_status2num_dict()
-    num2status = {}
-    for key, val in status2num.items():
-        num2status[val] = key
+#     Returns:
+#         [type] -- [description]
+#     """
 
-    return num2status
+#     STATUS = {
+#         "not_infected" : 0,
+#         "infected" : 1,
+#         "contagious" : 2,
+#         "diagnosed": 3,
+#         "immobilized" : 4,
+#         "recovered" : 5,
+#     }
+#     return STATUS
 
 
-def get_movement_coefficient():
-    """"samples the movement coefficient from a boltzman distribution
-    how much each individual moves
+# def get_num2status_dict():
+#     """[summary]
     
-    """
+#     Returns:
+#         [type] -- [description]
+#     """
+#     # STATUS = get_STATUS_dict()
+#     num2status = {}
+#     for key, val in STATES.items():
+#         num2status[val] = key
+
+#     return num2status
+
+
+# def get_movement_coefficient():
+#     """"samples the movement coefficient from a boltzman distribution
+#     how much each individual moves
+    
+#     """
 
 
 class CoronaSimulator(object):
@@ -88,11 +107,9 @@ class CoronaSimulator(object):
         # Then setup FuncAnimation.
         self.ani = animation.FuncAnimation(self.fig, self.update, interval=5, 
                                           init_func=self.setup_plot, blit=True)
-        self.status_colors = get_status_colors()
-        print(self.status_colors)
+        # self.status_colors = get_status_colors()
         self.num_infected = num_infected
-        print(self.num_infected)
-        self.status2num = get_status2num_dict()
+        # self.STATUS = get_STATUS_dict()
         self.initialize_infected(num_infected)
         self.counter = 0
         self.max_num_steps = max_num_steps
@@ -119,16 +136,17 @@ class CoronaSimulator(object):
 
     def get_handles_for_legend(self):
 
-        colors = np.zeros(len(self.status2num))
-        x, y = np.arange(len(self.status2num)), np.arange(len(self.status2num))
+        num_states = len(STATES)
+        colors = np.zeros(num_states)
+        x, y = np.arange(num_states), np.arange(num_states)
 
-        color_names = [None]*len(self.status2num)
-        for status, num in self.status2num.items():
-            colors[num] = self.status_colors[status]
+        color_names = [None] * num_states
+        for status, num in STATES.items():
+            colors[num] = COLORS[status]
             color_names[num] = status
 
 
-        scat = plt.scatter(x, y, c=colors, s=SIZE*np.ones(len(self.status2num)), vmin=0, vmax=1, label=list(color_names),
+        scat = plt.scatter(x, y, c=colors, s=SIZE * np.ones(num_states), vmin=0, vmax=1, label=list(color_names),
                                     cmap="jet", edgecolor="k")
 
         handles, labels =  scat.legend_elements(prop="colors", alpha=0.6)
@@ -152,10 +170,6 @@ class CoronaSimulator(object):
             xy = self.update_positions(xy)
             self.update_status(xy)
             colors = self.update_colors()
-            # self.counter += 1
-            # if self.counter > self.max_num_steps:
-            #     break
-            
             yield np.c_[xy[:,0], xy[:,1], sizes, colors]
 
     def update_positions(self, xy):
@@ -190,12 +204,12 @@ class CoronaSimulator(object):
         # self.stages_of_individuals = infected
         colors = np.zeros(self.numpoints)
 
-        try:
-            self.status2num = self.status2num
-        except AttributeError:
-            self.status2num = get_status2num_dict()
-        for stage_name, stage_num in self.status2num.items():
-            colors += self.status_colors[stage_name] * ( self.current_stages_of_individuals == stage_num )
+        # try:
+        #     # self.STATUS = self.STATUS
+        # except AttributeError:
+        #     # self.STATUS = get_STATUS_dict()
+        for stage_name, stage_num in STATES.items():
+            colors += COLORS[stage_name] * (self.current_stages_of_individuals == stage_num)
 
         return colors
 
@@ -245,7 +259,6 @@ class CoronaSimulator(object):
 
         # update the different stages of the disease
         self.current_stages_of_individuals = self.transition_manager.update_stages_of_disease(self.current_stages_of_individuals)
-        print(f"unique stages: {np.unique(self.current_stages_of_individuals)}")
 
 
     def update_who_is_infected(self, identities_of_newly_infected):
@@ -287,10 +300,9 @@ class CoronaSimulator(object):
             [np.ndarray, np.ndarray, np.ndarray] -- the positions, sizes and colors of the balls, in that corresponding order
         """
         xy = (np.random.random((self.numpoints, 2))-0.5)*self.size_of_box
-        sizes = SIZE*np.ones(self.numpoints)
-        print("self.numpoints",self.numpoints)
-        self.status_colors = get_status_colors()
-        colors = self.status_colors['not_infected']*np.ones(self.numpoints)
+        sizes = SIZE * np.ones(self.numpoints)
+        # self.status_colors = get_status_colors()
+        colors = COLORS['not_infected']*np.ones(self.numpoints)
 
         return xy, sizes, colors 
 
@@ -302,7 +314,7 @@ class CoronaSimulator(object):
         # Set x and y data...
         self.scat.set_offsets(data[:, :2])
         # Set sizes...
-        self.scat.set_sizes(300 * abs(data[:, 2])**1.5 + 100)
+        self.scat.set_sizes(300 * abs(data[:, 2]) ** 1.5 + 100)
         # Set colors..
         self.scat.set_array(data[:, 3])
         
