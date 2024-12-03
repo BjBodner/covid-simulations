@@ -3,16 +3,13 @@ import numpy as np
 class DiseaseStateHandler:
 
     def __init__(self, num_points):
-
         self.num_points = num_points
-
         self.transition_times = {
             "infected-contagious": {"mean": 20, "std": 5},
             "contagious-diagnosis": {"mean": 50, "std": 5},
             "diagnosis-immobilized": {"mean" : 5, "std": 2},
             "immobilized-recovered": {"mean" : 100, "std": 5}
         }
-
         self.number_of_transitions = len(self.transition_times)
         self.time_counters = np.zeros(num_points)
         self._set_transition_dicts()
@@ -35,7 +32,6 @@ class DiseaseStateHandler:
             4 : "immobilized-recovered",
         }
 
-
     def _sample_transition_times_from_distribution(self):
         """ samples the transition times for all individuals, and saves in self.transition_times """
         transition_array = np.zeros((self.num_points , self.number_of_transitions + 2))
@@ -50,37 +46,7 @@ class DiseaseStateHandler:
         
         self.transition_times = transition_array
 
-
-    def update_stages_of_disease(self, current_stages_of_individuals):
-        """updates the stages of the desease in all individuals
-        
-        Arguments:
-            current_stages_of_individuals {[np.ndarray]} -- the current stages of the desease in the different individuals
-        
-        Returns:
-            [np.ndarray] -- the new stages of the desease in all individuals, shape = [num_points]
-        """
-        # updates the stages of the individuals
-        new_stages_of_individuals, indicies_that_transitioned_to_next_stage = self._update_stages(current_stages_of_individuals)
-
-        # increments the time counter for individuals, and reboots it if a transition occured
-        if (len(indicies_that_transitioned_to_next_stage) > 0):
-            self.time_counters[indicies_that_transitioned_to_next_stage] = 0
-        self.time_counters += 1
-
-        return new_stages_of_individuals
-
-
     def _update_stages(self, current_stages_of_individuals):
-        """updates the stages of the desease for all individuals, using the transition times
-        
-        Arguments:
-            current_stages_of_individuals {[np.ndarray]} -- the current stages of all individuals
-        
-        Returns:
-            [np.ndarray, np.ndarray] -- [the new stages of the individuals, the indicies for which these changes happened]
-        """
-        # get the relavent transition times for each individual
         current_stages_of_individuals = current_stages_of_individuals.astype("int") 
         relavent_transition_times = np.array([self.transition_times[i, current_stages_of_individuals[i] ] for i in range(self.num_points)])
 
@@ -97,11 +63,24 @@ class DiseaseStateHandler:
 
         return new_stages_of_individuals, indicies_that_transitioned_to_next_stage
 
+    def reset_time_counters(self, new_cases_idx):
+        self.time_counters[new_cases_idx] = 0
+
+    def __call__(self, current_stages_of_individuals):
+        # updates the stages of the individuals
+        new_stages_of_individuals, indicies_that_transitioned_to_next_stage = self._update_stages(current_stages_of_individuals)
+
+        # increments the time counter for individuals, and reboots it if a transition occured
+        if (len(indicies_that_transitioned_to_next_stage) > 0):
+            self.time_counters[indicies_that_transitioned_to_next_stage] = 0
+        self.time_counters += 1
+
+        return new_stages_of_individuals
 
 
-def test_transition_manager():
-    transition_manager = TransitionManager(num_points=50)
+# def test_transition_manager():
+#     transition_manager = TransitionManager(num_points=50)
 
 
-if __name__ == '__main__':
-    test_transition_manager()
+# if __name__ == '__main__':
+#     test_transition_manager()
