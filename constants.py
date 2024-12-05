@@ -1,6 +1,6 @@
 BOX_SIZE = 20
 INITIAL_NUM_INFECTED = 5
-SIZE = 100 
+SIZE = 30 
 COLORS = {
     "not_infected" : 0.3,
     "infected" : 0.65,
