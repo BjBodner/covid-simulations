@@ -1,5 +1,7 @@
 import numpy as np
+
 from utils.constants import STATES
+
 
 class MovementHandler:
     def __init__(self, numpoints, amount_of_movement):
@@ -8,6 +10,12 @@ class MovementHandler:
         self.current_stages_of_individuals = np.zeros(self.numpoints).astype("int")
 
     def __call__(self, xy, current_stages_of_individuals):
-        mobile_individuals = np.expand_dims((current_stages_of_individuals != STATES["immobilized"]).astype(int), 1)
-        xy += self.amount_of_movement * mobile_individuals * (np.random.random((self.numpoints, 2)) - 0.5) 
+        mobile_individuals = np.expand_dims(
+            (current_stages_of_individuals != STATES["immobilized"]).astype(int), 1
+        )
+        xy += (
+            self.amount_of_movement
+            * mobile_individuals
+            * (np.random.random((self.numpoints, 2)) - 0.5)
+        )
         return xy

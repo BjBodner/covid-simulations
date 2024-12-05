@@ -1,1 +1,1 @@
-# Covid Simulator
+# Epidemic Simulator
