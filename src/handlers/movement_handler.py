@@ -1,5 +1,5 @@
 import numpy as np
-from constants import STATES
+from utils.constants import STATES
 
 class MovementHandler:
     def __init__(self, numpoints, amount_of_movement):

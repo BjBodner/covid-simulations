@@ -1,8 +1,9 @@
-from constants import STATES, COLORS, SIZE, BOX_SIZE
+from utils.constants import STATES, COLORS, SIZE, BOX_SIZE
 import numpy as np
-from infection_handler import InfectionHandler
-from movement_handler import MovementHandler
-class DataStream:
+from handlers.infection_handler import InfectionHandler
+from handlers.movement_handler import MovementHandler
+
+class CovidSimulator:
     def __init__(self, numpoints, num_infected, amount_of_movement, radius_of_possible_infection, probability_of_getting_infected):
         self.numpoints = numpoints
         self.movement_handler = MovementHandler(numpoints, amount_of_movement)

@@ -1,5 +1,5 @@
 import numpy as np
-from disease_state_handler import DiseaseStateHandler
+from handlers.disease_state_handler import DiseaseStateHandler
 
 class InfectionHandler:
     def __init__(self, numpoints, num_initial_infected, infection_radius, probability_of_getting_infected):
