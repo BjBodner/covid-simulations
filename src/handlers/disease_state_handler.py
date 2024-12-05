@@ -60,7 +60,6 @@ class DiseaseStateHandler:
         new_stages_of_individuals = np.minimum(new_stages_of_individuals, 5) 
         indicies_that_transitioned_to_next_stage = np.nonzero(transitions_to_apply) [0] 
 
-
         return new_stages_of_individuals, indicies_that_transitioned_to_next_stage
 
     def reset_time_counters(self, new_cases_idx):
@@ -76,11 +75,3 @@ class DiseaseStateHandler:
         self.time_counters += 1
 
         return new_stages_of_individuals
-
-
-# def test_transition_manager():
-#     transition_manager = TransitionManager(num_points=50)
-
-
-# if __name__ == '__main__':
-#     test_transition_manager()
