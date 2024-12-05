@@ -24,7 +24,7 @@ A real-time visualization tool for simulating epidemic spread using Streamlit an
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/epidemic-simulator.git
+git clone https://github.com/BjBodner/epidemic-simulator.git
 cd epidemic-simulator
 ```
 
@@ -44,7 +44,7 @@ The application will be available at `http://localhost:8501`
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/epidemic-simulator.git
+git clone https://github.com/BjBodner/epidemic-simulator.git
 cd epidemic-simulator
 ```
 
@@ -69,7 +69,10 @@ epidemic-simulator/
 │   ├── movement_handler.py
 │   ├── data_stream.py
 │   └── constants.py
+├── .dockerignore
+├── .gitignore
 ├── Dockerfile
+├── LICENSE
 ├── requirements.txt
 └── README.md
 ```
@@ -121,4 +124,4 @@ Feel free to submit issues, fork the repository, and create pull requests for an
 MIT
 
 ## Author
-Benjamin Bodner
+Benjamin J. Bodner
