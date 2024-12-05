@@ -90,32 +90,6 @@ epidemic-simulator/
 3. Click the "Start/Stop" button to control the simulation
 4. Parameters can be adjusted in real-time while the simulation is running
 
-## Docker Commands Reference
-
-Build the image:
-```bash
-docker build -t epidemic-simulator .
-```
-
-Run the container:
-```bash
-docker run -p 8501:8501 epidemic-simulator
-```
-
-Stop the container:
-```bash
-docker stop $(docker ps -q --filter ancestor=epidemic-simulator)
-```
-
-Remove the container:
-```bash
-docker rm $(docker ps -a -q --filter ancestor=epidemic-simulator)
-```
-
-Remove the image:
-```bash
-docker rmi epidemic-simulator
-```
 
 ## Contributing
 Feel free to submit issues, fork the repository, and create pull requests for any improvements.
