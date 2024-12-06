@@ -1,7 +1,6 @@
 import time
 
 import numpy as np
-import plotly.graph_objects as go
 import streamlit as st
 
 from simulator.epidemic_visualizer import SimulationVisualizer
@@ -86,10 +85,10 @@ def update_simulation_parameters() -> float:
         key="probability_slider",
     )
 
-    inverse_sped = st.sidebar.slider(
+    inverse_speed = st.sidebar.slider(
         "Simulation Speed", 10.0, 100.0, 80.0, help="Lower values = faster simulation"
     )
-    speed = 10.0 / inverse_sped
+    speed = 10.0 / inverse_speed
 
     # check if any parameters have changed
     parameters_changed = (
@@ -145,6 +144,7 @@ def main() -> None:
 
     time.sleep(speed)
     st.rerun()
+
 
 if __name__ == "__main__":
     main()

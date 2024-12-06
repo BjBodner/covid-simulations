@@ -1,9 +1,10 @@
 from typing import Tuple
+
 import numpy as np
 
 from handlers.infection_handler import InfectionHandler
 from handlers.movement_handler import MovementHandler
-from utils.constants import BOX_SIZE, COLORS, SIZE, STATES
+from utils.constants import BOX_SIZE, COLORS, STATES
 
 
 class EpidemicSimulator:
@@ -27,12 +28,11 @@ class EpidemicSimulator:
 
     def initialize_data_stream(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         xy = (np.random.random((self.numpoints, 2)) - 0.5) * BOX_SIZE
-        sizes = SIZE * np.ones(self.numpoints)
         colors = COLORS["not_infected"] * np.ones(self.numpoints)
-        return xy, sizes, colors
+        return xy, colors
 
     def data_stream(self) -> Tuple[np.ndarray, np.ndarray]:
-        xy, sizes, colors = self.initialize_data_stream()
+        xy, colors = self.initialize_data_stream()
         while True:
             disease_states = self.infection_handler(xy)
             xy = self.movement_handler(xy, disease_states)

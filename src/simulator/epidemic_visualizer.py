@@ -1,9 +1,10 @@
-from typing import Tuple
-from plotly import graph_objects as go
 import numpy as np
+from plotly import graph_objects as go
+
 from simulator.epidemic_simulator import EpidemicSimulator
 from utils.constants import BOX_SIZE, COLORS, SIZE, STATES
 
+L = int(BOX_SIZE / 2)
 
 
 class SimulationVisualizer:
@@ -28,7 +29,6 @@ class SimulationVisualizer:
         xy: np.ndarray
         c: np.ndarray
         xy, c = next(self.stream)
-        s: np.ndarray = SIZE * np.ones(self.numpoints)
 
         xy[: len(STATES), 0] = -BOX_SIZE * 2  # Move legend points out of the plot
         for i, color in enumerate(COLORS.values()):
@@ -52,7 +52,6 @@ class SimulationVisualizer:
                     )
                 )
 
-        L = int(BOX_SIZE / 2)
         fig = go.Figure(data=traces)
         fig.update_layout(
             width=800,
