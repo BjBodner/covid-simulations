@@ -4,12 +4,12 @@ from utils.constants import STATES
 
 
 class MovementHandler:
-    def __init__(self, numpoints, amount_of_movement):
+    def __init__(self, numpoints: int, amount_of_movement: float) -> None:
         self.numpoints = numpoints
         self.amount_of_movement = amount_of_movement
         self.current_stages_of_individuals = np.zeros(self.numpoints).astype("int")
 
-    def __call__(self, xy, current_stages_of_individuals):
+    def __call__(self, xy: np.ndarray, current_stages_of_individuals: np.ndarray) -> np.ndarray:
         mobile_individuals = np.expand_dims(
             (current_stages_of_individuals != STATES["immobilized"]).astype(int), 1
         )

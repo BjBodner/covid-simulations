@@ -4,90 +4,14 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-from epidemic_simulator import EpidemicSimulator
-from utils.constants import BOX_SIZE, COLORS, SIZE, STATES
+from simulator.epidemic_visualizer import SimulationVisualizer
+from utils.constants import COLORS, STATES
+
+st.set_page_config(layout="wide", page_title="Epidemic Spread Simulator", page_icon="🦠")
 
 
-class StreamlitEpidemicSimulator:
-    def __init__(
-        self,
-        numpoints=100,
-        num_infected=5,
-        amount_of_movement=0.15,
-        radius_of_possible_infection=1,
-        probability_of_getting_infected=0.1,
-    ):
-        self.numpoints = numpoints
-        self.stream = EpidemicSimulator(
-            numpoints,
-            num_infected,
-            amount_of_movement,
-            radius_of_possible_infection,
-            probability_of_getting_infected,
-        )
-
-    def create_figure(self):
-        xy, c = next(self.stream)
-        s = SIZE * np.ones(self.numpoints)
-
-        xy[: len(STATES), 0] = -BOX_SIZE * 2  # Move legend points out of the plot
-        for i, color in enumerate(COLORS.values()):
-            c[i] = color
-
-        traces = []
-        for state_name, state_num in STATES.items():
-            mask = c == COLORS[state_name]
-            if np.any(mask):
-                traces.append(
-                    go.Scatter(
-                        x=xy[mask, 0],
-                        y=xy[mask, 1],
-                        mode="markers",
-                        name=state_name,
-                        marker=dict(
-                            size=SIZE,
-                            color=COLORS[state_name],
-                            line=dict(width=1, color="black"),
-                        ),
-                    )
-                )
-
-        L = int(BOX_SIZE / 2)
-        fig = go.Figure(data=traces)
-        fig.update_layout(
-            width=800,
-            height=800,
-            showlegend=True,
-            legend=dict(yanchor="top", y=0.99, xanchor="left", x=1.05),
-            xaxis=dict(
-                range=[-L, L], showgrid=False, zeroline=False, showticklabels=False
-            ),
-            yaxis=dict(
-                range=[-L, L], showgrid=False, zeroline=False, showticklabels=False
-            ),
-            margin=dict(l=0, r=0, t=0, b=0),
-            plot_bgcolor="white",
-        )
-
-        return fig, xy, c
-
-
-def initialize_session_state():
-    if "simulation_running" not in st.session_state:
-        st.session_state.simulation_running = True
-    if "parameters" not in st.session_state:
-        st.session_state.parameters = {
-            "numpoints": 100,
-            "num_infected": 5,
-            "amount_of_movement": 0.15,
-            "radius_of_infection": 1.0,
-            "infection_probability": 0.1,
-        }
-
-
-def handle_parameter_change():
-    # st.session_state.simulation_running = False
-    st.session_state.simulator = StreamlitEpidemicSimulator(
+def handle_parameter_change() -> None:
+    st.session_state.simulator = SimulationVisualizer(
         numpoints=st.session_state.parameters["numpoints"],
         num_infected=st.session_state.parameters["num_infected"],
         amount_of_movement=st.session_state.parameters["amount_of_movement"],
@@ -99,22 +23,33 @@ def handle_parameter_change():
     st.session_state.plot_components = st.session_state.simulator.create_figure()
 
 
-def main():
-    st.set_page_config(layout="wide")
-    st.title("Epidemic Spread Simulator")
+def initialize_session_state() -> None:
+    st.session_state.initialized = True
+    st.session_state.simulation_running = True
+    st.session_state.parameters = {
+        "numpoints": 200,
+        "num_infected": 5,
+        "amount_of_movement": 0.25,
+        "radius_of_infection": 1.0,
+        "infection_probability": 0.1,
+    }
+    st.session_state.plot_placeholder = st.empty()
+    handle_parameter_change()
 
-    initialize_session_state()
 
-    col1, col2 = st.columns([1, 5])
-    with col1:
-        if st.button("Start/Stop"):
-            st.session_state.simulation_running = (
-                not st.session_state.simulation_running
-            )
+def toggle_simulation() -> None:
+    st.session_state.simulation_running = not st.session_state.simulation_running
 
-    st.sidebar.header("Simulation Parameters")
 
-    # Use key parameter to trigger callback on change
+def start_stop_simulation() -> None:
+    cols = st.columns([1, 5])
+    with cols[0]:
+        st.button("Start/Pause", key="start_pause_button", on_click=toggle_simulation)
+    with cols[1]:
+        st.button("Reset", key="reset_button", on_click=handle_parameter_change)
+
+
+def update_simulation_parameters() -> float:
     new_numpoints = st.sidebar.slider(
         "Population",
         50,
@@ -151,12 +86,12 @@ def main():
         key="probability_slider",
     )
 
-    speed_ = st.sidebar.slider(
+    inverse_sped = st.sidebar.slider(
         "Simulation Speed", 10.0, 100.0, 80.0, help="Lower values = faster simulation"
     )
-    speed = 10.0 / speed_
+    speed = 10.0 / inverse_sped
 
-    # Check if any parameter has changed
+    # check if any parameters have changed
     parameters_changed = (
         new_numpoints != st.session_state.parameters["numpoints"]
         or new_num_infected != st.session_state.parameters["num_infected"]
@@ -176,11 +111,10 @@ def main():
             }
         )
         handle_parameter_change()
+    return speed
 
-    if "simulator" not in st.session_state:
-        handle_parameter_change()
 
-    plot_placeholder = st.empty()
+def render_simulation_visualization() -> None:
     fig, xy, c = st.session_state.plot_components
 
     if st.session_state.simulation_running:
@@ -189,30 +123,28 @@ def main():
         for i, state_name in enumerate(STATES.keys()):
             mask = c == COLORS[state_name]
             if np.any(mask):
-                try:
-                    fig.data[i].x = xy[mask, 0]
-                    fig.data[i].y = xy[mask, 1]
-                except IndexError:
-                    fig.add_trace(
-                        go.Scatter(
-                            x=xy[mask, 0],
-                            y=xy[mask, 1],
-                            mode="markers",
-                            name=state_name,
-                            marker=dict(
-                                size=SIZE,
-                                color=COLORS[state_name],
-                                line=dict(width=1, color="black"),
-                            ),
-                        )
-                    )
+                fig.data[i].x = xy[mask, 0]
+                fig.data[i].y = xy[mask, 1]
 
-    plot_placeholder.plotly_chart(fig, use_container_width=True)
+    st.session_state.plot_placeholder.plotly_chart(fig, use_container_width=True)
 
-    if st.session_state.simulation_running:
-        time.sleep(speed)
-        st.rerun()
 
+def render_static_elements() -> None:
+    st.title("Epidemic Spread Simulator")
+    st.sidebar.header("Simulation Parameters")
+
+
+def main() -> None:
+    render_static_elements()
+    if "initialized" not in st.session_state:
+        initialize_session_state()
+
+    start_stop_simulation()
+    speed = update_simulation_parameters()
+    render_simulation_visualization()
+
+    time.sleep(speed)
+    st.rerun()
 
 if __name__ == "__main__":
     main()
