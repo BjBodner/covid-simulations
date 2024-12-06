@@ -5,7 +5,7 @@ from collections import OrderedDict
 TRANSITION_TIMES = OrderedDict(
     infected_contagious={"mean": 20, "std": 5},
     contagious_diagnosis={"mean": 50, "std": 5},
-    diagnosis_immobilized={"mean": 5, "std": 2},
+    diagnosis_immobilized={"mean": 10, "std": 2},
     immobilized_recovered={"mean": 100, "std": 5},
 )
 
@@ -24,10 +24,10 @@ class DiseaseStateHandler:
             transition_array[:, i + 1] = transition_params["mean"] + transition_params["std"] * np.random.randn(self.num_points)
         return transition_array
 
-    def _update_stages(self, current_stages_of_individuals: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        relavent_transition_times = self.transition_times[self.point_idx, current_stages_of_individuals]
+    def _update_stages(self, current_stages: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        relavent_transition_times = self.transition_times[self.point_idx, current_stages]
         transitions_to_apply = (self.time_counters > relavent_transition_times).astype(int)
-        new_stages_of_individuals = np.minimum(current_stages_of_individuals + transitions_to_apply, 5)
+        new_stages_of_individuals = np.minimum(current_stages + transitions_to_apply, 5)
 
         self.reset_time_counters(transitions_to_apply)
         return new_stages_of_individuals
@@ -36,7 +36,7 @@ class DiseaseStateHandler:
         if len(reboot_idx) > 0:
             self.time_counters[reboot_idx] = 0
 
-    def __call__(self, current_stages_of_individuals: np.ndarray) -> np.ndarray:
-        new_stages_of_individuals = self._update_stages(current_stages_of_individuals)
+    def __call__(self, current_stages: np.ndarray) -> np.ndarray:
+        new_stages_of_individuals = self._update_stages(current_stages)
         self.time_counters += 1
         return new_stages_of_individuals

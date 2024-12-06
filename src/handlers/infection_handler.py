@@ -1,5 +1,5 @@
 import numpy as np
-
+from typing import Optional, Set
 from handlers.disease_state_handler import DiseaseStateHandler
 
 
@@ -12,69 +12,62 @@ class InfectionHandler:
         probability_of_getting_infected: float,
     ) -> None:
         self.numpoints = numpoints
-        self.infection_radius = infection_radius
+        self.infection_radius_squared = infection_radius ** 2  # Pre-compute square
         self.probability_of_getting_infected = probability_of_getting_infected
-        self.infected_matrix = np.zeros((self.numpoints, self.numpoints))
-        self.current_stages_of_individuals = np.zeros(self.numpoints) 
-        self.identities_of_infected = np.random.randint(
-            0, self.numpoints, num_initial_infected
+        
+        self.identities_of_infected = np.random.choice(
+            self.numpoints, 
+            size=num_initial_infected, 
+            replace=False
         )
-        self.infected_matrix[self.identities_of_infected, :] = 1
-        self.current_stages_of_individuals[self.identities_of_infected] = 1
-        self.identities_of_recovered = set()
+        self.current_stages = np.zeros(self.numpoints).astype(int)
+        self.current_stages[self.identities_of_infected] = 1
+        self.identities_of_recovered: Set[int] = set()
         self.disease_state_handler = DiseaseStateHandler(numpoints)
+        self._distance_cache: Optional[np.ndarray] = None
+        self._last_xy: Optional[np.ndarray] = None
 
     def get_newly_infected(self, xy: np.ndarray) -> np.ndarray:
-        adjacency_matrix = ((xy[None, :, :] - xy[:, None, :]) ** 2).sum(2)
-        within_radius = adjacency_matrix < self.infection_radius**2
-        at_risk_of_infection = within_radius * self.infected_matrix
-        should_get_infected = (
-            np.random.rand(self.numpoints, self.numpoints)
-            < self.probability_of_getting_infected
-        )
-        newly_infected_matrix = should_get_infected * at_risk_of_infection
-        identities_of_newly_infected = np.where(np.sum(newly_infected_matrix, 0))[0]
-        return identities_of_newly_infected
+        distances = np.sum((xy[None, :, :] - xy[:, None, :]) ** 2, axis=2)
+        infected_distances = distances[self.identities_of_infected]
+        at_risk = infected_distances < self.infection_radius_squared
+        random_values = np.random.rand(*at_risk.shape)
+        will_infect = random_values < self.probability_of_getting_infected
+        newly_infected = np.unique(np.where(at_risk & will_infect)[1])
+        
+        mask = np.ones(len(newly_infected), dtype=bool)
+        for idx, individual in enumerate(newly_infected):
+            if (individual in self.identities_of_recovered or 
+                individual in self.identities_of_infected):
+                mask[idx] = False
+        
+        return newly_infected[mask]
 
-    def update_with_new_infection(self, xy: np.ndarray) -> np.ndarray:
-        identities_of_newly_infected = self.get_newly_infected(xy)
-        # TODO pull this from memory
-        already_infected, newly_infected = np.zeros(self.numpoints), np.zeros(
-            self.numpoints
-        )
-        already_infected[self.identities_of_infected] = 1
-        newly_infected[identities_of_newly_infected] = 1
-
-        # update identities of infected
-        # TODO make this more efficient
-        updated_infected = np.logical_or(already_infected, newly_infected)
-        self.identities_of_infected = np.nonzero(updated_infected)[0]
-        self.identities_of_recovered = set(
-            np.nonzero(self.current_stages_of_individuals == 5)[0]
-        )
-        self.identities_of_infected = np.array(
-            [
-                idx
-                for idx in self.identities_of_infected
-                if idx not in self.identities_of_recovered
-            ]
-        ).astype(int)
-        updated_infected = np.zeros(self.numpoints)
-        updated_infected[self.identities_of_infected] = 1
-
-        # update infected matrix
-        self.infected_matrix = np.zeros_like(self.infected_matrix)
-        self.infected_matrix[self.identities_of_infected, :] = 1
-
-        # update
-        # TODO change non zero to where in multiple places
-        new_cases = (updated_infected - already_infected).copy().astype("int")
-        self.disease_state_handler.reset_time_counters(np.nonzero(new_cases)[0])
-        self.current_stages_of_individuals += new_cases
-        return self.current_stages_of_individuals.astype(int)
+    def _update_infected(self, xy: np.ndarray) -> None:
+        newly_infected = self.get_newly_infected(xy)
+        
+        if len(newly_infected) > 0:
+            self.identities_of_infected = np.append(
+                self.identities_of_infected, 
+                newly_infected
+            )
+            self.disease_state_handler.reset_time_counters(newly_infected)
+            self.current_stages[newly_infected] = 1
+        
+    def _update_recovered(self) -> None:
+        recovered_mask = self.current_stages == 5
+        new_recovered = set(np.where(recovered_mask)[0]) - self.identities_of_recovered
+        self.identities_of_recovered.update(new_recovered)
+        
+        if new_recovered:
+            mask = np.ones(len(self.identities_of_infected), dtype=bool)
+            for idx, individual in enumerate(self.identities_of_infected):
+                if individual in new_recovered:
+                    mask[idx] = False
+            self.identities_of_infected = self.identities_of_infected[mask]
 
     def __call__(self, xy: np.ndarray) -> np.ndarray:
-        disease_states = self.update_with_new_infection(xy)
-        disease_states = self.disease_state_handler(disease_states)
-        self.current_stages_of_individuals = disease_states
-        return self.current_stages_of_individuals
+        self._update_infected(xy)
+        self._update_recovered()
+        self.current_stages = self.disease_state_handler(self.current_stages)
+        return self.current_stages

@@ -30,7 +30,7 @@ def initialize_session_state() -> None:
         "numpoints": 200,
         "num_infected": 5,
         "amount_of_movement": 0.25,
-        "radius_of_infection": 1.0,
+        "radius_of_infection": 1.5,
         "infection_probability": 0.1,
     }
     st.session_state.plot_placeholder = st.empty()
