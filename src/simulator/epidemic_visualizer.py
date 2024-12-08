@@ -42,11 +42,11 @@ class SimulationVisualizer:
         self.update_time_series(s)
 
         fig = make_subplots(
-            rows=2, 
+            rows=2,
             cols=1,
-            subplot_titles=('Epidemic Spread', 'Population States'),
+            subplot_titles=("Epidemic Spread", "Population States"),
             row_heights=[0.7, 0.3],
-            vertical_spacing=0.1
+            vertical_spacing=0.1,
         )
 
         # Add scatter plot traces
@@ -55,7 +55,7 @@ class SimulationVisualizer:
             s[state_num] = state_num
 
         for state_name, state_num in STATES.items():
-            mask = (s == state_num)
+            mask = s == state_num
             if np.any(mask):
                 fig.add_trace(
                     go.Scatter(
@@ -70,8 +70,8 @@ class SimulationVisualizer:
                         ),
                         showlegend=True,
                     ),
-                    row=1, 
-                    col=1
+                    row=1,
+                    col=1,
                 )
 
         # Add population tracking plot traces
@@ -80,13 +80,13 @@ class SimulationVisualizer:
                 go.Scatter(
                     x=self.timestamps,
                     y=self.time_series_data[state_name],
-                    mode='lines',
-                    name=f'{state_name} (count)',
+                    mode="lines",
+                    name=f"{state_name} (count)",
                     line=dict(color=COLORS[state_name]),
                     showlegend=True,
                 ),
                 row=2,
-                col=1
+                col=1,
             )
 
         fig.update_layout(
@@ -98,33 +98,24 @@ class SimulationVisualizer:
             plot_bgcolor="white",
         )
         fig.update_xaxes(
-            range=[-L, L], 
-            showgrid=False, 
-            zeroline=False, 
+            range=[-L, L],
+            showgrid=False,
+            zeroline=False,
             showticklabels=False,
-            row=1, 
-            col=1
+            row=1,
+            col=1,
         )
         fig.update_yaxes(
-            range=[-L, L], 
-            showgrid=False, 
-            zeroline=False, 
+            range=[-L, L],
+            showgrid=False,
+            zeroline=False,
             showticklabels=False,
-            row=1, 
-            col=1
+            row=1,
+            col=1,
         )
-        fig.update_xaxes(
-            title_text="Time",
-            showgrid=True,
-            row=2,
-            col=1
-        )
+        fig.update_xaxes(title_text="Time", showgrid=True, row=2, col=1)
         fig.update_yaxes(
-            title_text="Population",
-            showgrid=True,
-            showticklabels=False,
-            row=2,
-            col=1
+            title_text="Population", showgrid=True, showticklabels=False, row=2, col=1
         )
 
         return fig, xy, s
