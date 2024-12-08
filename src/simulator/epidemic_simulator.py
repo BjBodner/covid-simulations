@@ -4,7 +4,7 @@ import numpy as np
 
 from handlers.infection_handler import InfectionHandler
 from handlers.movement_handler import MovementHandler
-from utils.constants import BOX_SIZE, COLORS, STATES
+from utils.constants import BOX_SIZE
 
 
 class EpidemicSimulator:
@@ -28,22 +28,15 @@ class EpidemicSimulator:
 
     def initialize_data_stream(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         xy = (np.random.random((self.numpoints, 2)) - 0.5) * BOX_SIZE
-        colors = COLORS["not_infected"] * np.ones(self.numpoints)
-        return xy, colors
+        disease_states = np.zeros(self.numpoints)
+        return xy, disease_states
 
     def data_stream(self) -> Tuple[np.ndarray, np.ndarray]:
-        xy, colors = self.initialize_data_stream()
+        xy, _ = self.initialize_data_stream()
         while True:
             disease_states = self.infection_handler(xy)
             xy = self.movement_handler(xy, disease_states)
-            colors = self.update_colors(disease_states)
-            yield xy, colors
-
-    def update_colors(self, disease_states: np.ndarray) -> np.ndarray:
-        colors = np.zeros(self.numpoints)
-        for stage_name, stage_num in STATES.items():
-            colors[disease_states == stage_num] = COLORS[stage_name]
-        return colors
+            yield xy, disease_states
 
     def __next__(self) -> Tuple[np.ndarray, np.ndarray]:
         return next(self.stream)

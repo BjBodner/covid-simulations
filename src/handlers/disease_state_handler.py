@@ -6,7 +6,7 @@ import numpy as np
 TRANSITION_TIMES = OrderedDict(
     infected_contagious={"mean": 20, "std": 5},
     contagious_diagnosis={"mean": 50, "std": 5},
-    diagnosis_immobilized={"mean": 15, "std": 2},
+    diagnosis_immobilized={"mean": 15, "std": 20},
     immobilized_recovered={"mean": 100, "std": 5},
 )
 

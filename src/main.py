@@ -4,13 +4,13 @@ import numpy as np
 import streamlit as st
 
 from simulator.epidemic_visualizer import SimulationVisualizer
-from utils.constants import COLORS, STATES
+from utils.constants import STATES
 
-st.set_page_config(layout="wide", page_title="Epidemic Spread Simulator", page_icon="🦠")
+st.set_page_config(layout="wide", page_title="Epidemic Spread simulation_visualizer", page_icon="🦠")
 
 
 def handle_parameter_change() -> None:
-    st.session_state.simulator = SimulationVisualizer(
+    st.session_state.simulation_visualizer = SimulationVisualizer(
         numpoints=st.session_state.parameters["numpoints"],
         num_infected=st.session_state.parameters["num_infected"],
         amount_of_movement=st.session_state.parameters["amount_of_movement"],
@@ -19,7 +19,7 @@ def handle_parameter_change() -> None:
             "infection_probability"
         ],
     )
-    st.session_state.plot_components = st.session_state.simulator.create_figure()
+    st.session_state.plot_components = st.session_state.simulation_visualizer.create_figure()
 
 
 def initialize_session_state() -> None:
@@ -113,23 +113,59 @@ def update_simulation_parameters() -> float:
     return speed
 
 
+# def render_simulation_visualization() -> None:
+#     fig, xy, c = st.session_state.plot_components
+
+#     if st.session_state.simulation_running:
+#         xy, s = next(st.session_state.simulation_visualizer.stream)
+
+#         for i, state_num in enumerate(STATES.values()):
+#             mask = (s == state_num)
+#             if np.any(mask):
+#                 fig.data[i].x = xy[mask, 0]
+#                 fig.data[i].y = xy[mask, 1]
+
+
+#     st.session_state.plot_placeholder.plotly_chart(fig, use_container_width=True)
+
+
 def render_simulation_visualization() -> None:
-    fig, xy, c = st.session_state.plot_components
+    fig, xy, s = st.session_state.plot_components
+    
+    # # Initialize time series data if it doesn't exist
+    # if 'time_series_data' not in st.session_state:
+    #     st.session_state.time_series_data = {state: [] for state in STATES.keys()}
+    #     st.session_state.timestamps = []
+    #     st.session_state.current_time = 0
 
     if st.session_state.simulation_running:
-        xy, c = next(st.session_state.simulator.stream)
+        xy, s = next(st.session_state.simulation_visualizer.stream)
+        st.session_state.simulation_visualizer.update_time_series(s)
 
-        for i, state_name in enumerate(STATES.keys()):
-            mask = c == COLORS[state_name]
+        for i, (state_name, state_num) in enumerate(STATES.items()):
+            mask = (s == state_num)
             if np.any(mask):
                 fig.data[i].x = xy[mask, 0]
                 fig.data[i].y = xy[mask, 1]
+
+            fig.data[i + len(STATES)].x = st.session_state.simulation_visualizer.timestamps
+            fig.data[i + len(STATES)].y = st.session_state.simulation_visualizer.time_series_data[state_name]
+
+        # # Update time series data
+        # st.session_state.timestamps.append(st.session_state.current_time)
+        # for i, (state_name, state_num) in enumerate(STATES.items()):
+        #     count = np.sum(s == state_num)
+        #     st.session_state.time_series_data[state_name].append(count)
+        #     fig.data[i + len(STATES)].x = st.session_state.timestamps
+        #     fig.data[i + len(STATES)].y = st.session_state.time_series_data[state_name]
+        
+        # st.session_state.current_time += 1
 
     st.session_state.plot_placeholder.plotly_chart(fig, use_container_width=True)
 
 
 def render_static_elements() -> None:
-    st.title("Epidemic Spread Simulator")
+    st.title("Epidemic Spread simulation_visualizer")
     st.sidebar.header("Simulation Parameters")
 
 

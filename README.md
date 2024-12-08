@@ -1,5 +1,7 @@
 # Epidemic Simulator
 
+![Alt text](./media/demo.gif)
+
 A real-time visualization tool for simulating epidemic spread using Streamlit and Plotly. This interactive simulation allows users to adjust various parameters and observe how diseases spread through a population.
 
 ## Features
@@ -13,12 +15,8 @@ A real-time visualization tool for simulating epidemic spread using Streamlit an
 - Interactive controls for starting/stopping the simulation
 - Adjustable simulation speed
 
-## Prerequisites
-- Python 3.9 or higher
-- pip (Python package installer)
-- Docker (optional, for containerized deployment)
 
-## Installation & Running
+## Installation & How to Run
 
 ### Method 1: Running with Streamlit directly
 
@@ -59,23 +57,6 @@ docker run -p 8501:8501 epidemic-simulator
 ```
 
 The application will be available at `http://localhost:8501`
-
-## Project Structure
-```
-epidemic-simulator/
-├── src/
-│   ├── main.py
-│   ├── infection_handler.py
-│   ├── movement_handler.py
-│   ├── data_stream.py
-│   └── constants.py
-├── .dockerignore
-├── .gitignore
-├── Dockerfile
-├── LICENSE
-├── requirements.txt
-└── README.md
-```
 
 ## Usage
 
