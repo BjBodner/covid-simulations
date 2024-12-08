@@ -4,18 +4,6 @@
 
 A real-time visualization tool for simulating epidemic spread using Streamlit and Plotly. This interactive simulation allows users to adjust various parameters and observe how diseases spread through a population.
 
-## Features
-- Real-time visualization of disease spread
-- Adjustable parameters:
-  - Population size
-  - Initial number of infected individuals
-  - Movement patterns
-  - Infection radius
-  - Infection probability
-- Interactive controls for starting/stopping the simulation
-- Adjustable simulation speed
-
-
 ## Installation & How to Run
 
 ### Method 1: Running with Streamlit directly
